@@ -17,8 +17,9 @@ from django.contrib import admin
 from django.urls import path
 import summary.views
 urlpatterns = [
-    path('',summary.views.home),
+    path('',summary.views.h),
     path('home',summary.views.home,name='home'),
+    path('_word2vec',summary.views._word2vec,name='_word2vec'),
     
     path('admin/', admin.site.urls),
 ]

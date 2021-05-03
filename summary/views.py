@@ -9,6 +9,12 @@ from nltk.corpus import stopwords
 re_punc = ''.join([re.escape(x) for x in string.punctuation])
 nltk.download('stopwords')
 from nltk.tokenize import word_tokenize
+import warnings
+warnings.filterwarnings(action = 'ignore')
+from gensim.models import Word2Vec
+from gensim.models import keyedvectors
+from nltk.stem import WordNetLemmatizer
+import numpy as np
 
 # Create your views here.
 def decontracted(phrase):
@@ -170,7 +176,76 @@ def home(request):
     
     return render(request,'home.html',{'original_text':news1,'summarized_text':summary})
 
+def h(request):
+    return render(request,'home.html')
 
+def _word2vec(request):
+    news=request.POST.get('fulltext',False)
+    news=str(news)
+    news1=news
+    news=news.strip()
+    news=news.lower()
+    data1 = []
+    news=decontracted(news)
+    
+    sentences = sent_tokenize(news)
+    sentence_vector = []
+    stopWords = set(stopwords.words("english"))
+    for j in range(len(sentences)):
+        sentences[j] = sentences[j].replace(re_punc,"")
+    
+    for sentence in sentences:
+        temp = []
+        # tokenize the sentence into words
+        w = word_tokenize(sentence)
+        for word in w:
+            if word in stopWords:
+                continue
+            if word.isalnum():
+                temp.append(word.lower())                
+        data1.append(temp)
+
+    model = Word2Vec(data1, min_count = 1, vector_size = 100, window = 5)
+    words = list(model.wv.key_to_index)
+    #print(words)
+    word_vectors=model.wv
+    word_vectors.save_word2vec_format('vecs.txt')
+    reloaded_word_vectors = keyedvectors.load_word2vec_format('vecs.txt',binary=False)
+
+    for sentence in sentences:
+        feature_vec = np.zeros((100, ), dtype='float32')
+        w = word_tokenize(sentence)
+        n_words = 0
+        for word in w:
+            if word in stopWords:
+                continue
+            if word.isalnum():
+                n_words+=1
+                vec = reloaded_word_vectors.get_vector(word.lower())
+                feature_vec = np.add(feature_vec,vec)
+        if n_words>0:
+            feature_vec = np.divide(feature_vec,n_words)
+        final_sentence_vec = np.dot(feature_vec,np.ones((100,1)))
+        
+        sentence_vector.append(final_sentence_vec[0])
+
+    sort_idx = np.argsort(sentence_vector)
+    largest_indices = sort_idx[::-1][:5]
+
+    summarized_text = ""
+    if(len(sentences)<5):
+        s=""
+        for j in sentences:
+            s+=j
+        summarized_text+=s
+    else:
+        s=""
+        for j in largest_indices:
+            s+=sentences[j]
+        summarized_text+=s
+    #print("---------------------------------------------------------------------------------------------------------------")
+    #print(summarized_text)
+    return render(request,'home.html',{'original_text':news1,'summarized_text':summarized_text})
 
 
 

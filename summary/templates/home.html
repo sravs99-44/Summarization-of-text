@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>CSS Website Layout</title>
+<title>Summary</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -103,8 +103,13 @@ border-style: inset;
         <textarea  name="fulltext" >
         {{original_text}}
         </textarea>
-        <input type="submit"  class="button" value="Summarize">
-    </form>
+    
+        <input type="submit"  class="button" value="Summarize using TF_IDF">
+        
+        <input type="submit"  class="button" formaction="_word2vec" value="Summarize using word2vec">
+      </form>
+
+    
 
         
         
