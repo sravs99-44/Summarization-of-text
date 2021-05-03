@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>CSS Website Layout</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+/* Style the header */
+.header {
+  
+  padding: 20px;
+  text-align: center;
+  overflow: hidden;
+  background-color: #333;
+  color: #f2f2f2;
+}
+#leftbox {
+                float:left; 
+                background:#f2f2f2;
+                width:50%;
+                height:500px;
+                padding-left:20px;
+                border: solid #333;
+            }
+
+            #rightbox{
+                float:left; 
+                background:#f2f2f2;
+                width:50%;
+                height:500px;
+                padding-left:20px;
+                
+                border : solid #333;
+            }
+
+
+.button {
+  background-color: #333;
+  border: none;
+  
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 12px;
+  
+}
+textarea {
+width: 600px;
+height: 350px;
+border:none;
+background:white;
+scrollbar-base-color:#333;
+scrollbar-arrow-color: w;
+border-radius: 25px;
+border-style: inset;
+}
+
+/* Create three equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 40%;
+  padding: 15px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+@media screen and (max-width:600px) {
+  .column {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Summarizer</h1>
+  
+</div>
+<div id = "leftbox">
+    <h2>Enter your text to be summarized...</h2>
+   
+    <form method="POST" action='home' >{% csrf_token %}
+        <textarea  name="fulltext" >
+        {{original_text}}
+        </textarea>
+        <input type="submit"  class="button" value="Summarize">
+    </form>
+
+        
+        
+        
+</div> 
+<div id = "rightbox">
+    <h2>The summary is...</h2>
+    <p><textarea name="item" cols="150" rows="40">
+      {{summarized_text}}
+    </textarea>
+</div> 
+
+
+
+
+
+
+
+
+</body>
+</html>
