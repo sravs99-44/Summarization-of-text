@@ -15,6 +15,12 @@ from gensim.models import Word2Vec
 from gensim.models import keyedvectors
 from nltk.stem import WordNetLemmatizer
 import numpy as np
+from rouge_score import rouge_scorer
+scorer = rouge_scorer.RougeScorer(['rouge1','rougeL'],use_stemmer=False)
+from nltk.translate.bleu_score import sentence_bleu
+from tqdm.notebook import trange
+#from nltk.translate.bleu_score import corpus_bleu
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Create your views here.
 def decontracted(phrase):
@@ -171,10 +177,56 @@ def home(request):
     threshold = _find_average_score(sentence_scores)
     summary = _generate_summary(tokenized_sentences, sentence_scores, 1 * threshold)
     print(summary)
+    cleaned_sentences=sent_tokenize(news1)
+    references=[]
+    for i in cleaned_sentences:
+        words=word_tokenize(i)
+        references.append(words)
+    summ_cleaned_texts=sent_tokenize(summary)
+    candidates=[]
+    for i in summ_cleaned_texts:
+        words=word_tokenize(i)
+        candidates.append(words)
+    tot_score=0
+    for candidate in candidates:
+        score = sentence_bleu(references, candidate)
+        tot_score+=score
+    bleu_score=tot_score/len(candidates)
+    print(bleu_score)
+    rouge = scorer.score(news1, summary)
+
+    print("rougge_score:",rouge)
+    X_list = word_tokenize(news1)
+    Y_list = word_tokenize(summary)
+
+    # sw contains the list of stopwords
+    sw = stopwords.words('english')
+    l1 =[];l2 =[]
+
+    # remove stop words from the string
+    X_set = {w for w in X_list if not w in sw}
+    Y_set = {w for w in Y_list if not w in sw}
+
+    # form a set containing keywords of both strings
+    rvector = X_set.union(Y_set)
+    for w in rvector:
+        if w in X_set: l1.append(1) # create a vector
+        else: l1.append(0)
+        if w in Y_set: l2.append(1)
+        else: l2.append(0)
+    c = 0
+
+    # cosine formula
+    for i in range(len(rvector)):
+            c+= l1[i]*l2[i]
+    cosine = c / float((sum(l1)*sum(l2))**0.5)
+    print("similarity: ", cosine)
+
+
 
 
     
-    return render(request,'home.html',{'original_text':news1,'summarized_text':summary})
+    return render(request,'home.html',{'original_text':news1,'summarized_text':summary,'bleu':bleu_score,'rouge':rouge,'cos':cosine})
 
 def h(request):
     return render(request,'home.html')
@@ -211,11 +263,19 @@ def _word2vec(request):
     word_vectors=model.wv
     word_vectors.save_word2vec_format('vecs.txt')
     reloaded_word_vectors = keyedvectors.load_word2vec_format('vecs.txt',binary=False)
-
+    clean_sentence = []
+    word_vector = []
+    sentence_vector = []
+    all_sentences_feature_vec = []  # feature vectors of all sentences in a record
+    para_vector = np.zeros((100, ), dtype='float32')
+    references = []
+        
     for sentence in sentences:
         feature_vec = np.zeros((100, ), dtype='float32')
         w = word_tokenize(sentence)
         n_words = 0
+        s=""
+        refs_sentence=[]
         for word in w:
             if word in stopWords:
                 continue
@@ -223,29 +283,62 @@ def _word2vec(request):
                 n_words+=1
                 vec = reloaded_word_vectors.get_vector(word.lower())
                 feature_vec = np.add(feature_vec,vec)
+                s+=word.lower()
+                s+=" "
+                refs_sentence.append(word.lower())
+                
+        references.append(refs_sentence)
+        clean_sentence.append(s.strip())
+        
         if n_words>0:
             feature_vec = np.divide(feature_vec,n_words)
+            
+        all_sentences_feature_vec.append(feature_vec)
+        para_vector = np.add(para_vector,feature_vec)
         final_sentence_vec = np.dot(feature_vec,np.ones((100,1)))
-        
         sentence_vector.append(final_sentence_vec[0])
+        
+    para_vector = np.divide(para_vector, len(sentences))
 
     sort_idx = np.argsort(sentence_vector)
     largest_indices = sort_idx[::-1][:5]
+    #print(largest_indices)
+    largest_indices.sort()
+    #print(largest_indices)
 
+    summ_vector = np.zeros((100, ), dtype='float32')
+    candidates = []
     summarized_text = ""
     if(len(sentences)<5):
         s=""
-        for j in sentences:
-            s+=j
+        for j in range(len(sentences)):
+            s+=sentences[j]
+            a = clean_sentence[j].split()
+            candidates.append(a)
+            summ_vector = np.add(summ_vector,all_sentences_feature_vec[j])
         summarized_text+=s
+        summ_vector = np.divide(summ_vector, len(sentences))
     else:
         s=""
         for j in largest_indices:
             s+=sentences[j]
+            a = clean_sentence[j].split()
+            candidates.append(a)
+            summ_vector = np.add(summ_vector,all_sentences_feature_vec[j])
         summarized_text+=s
-    #print("---------------------------------------------------------------------------------------------------------------")
-    #print(summarized_text)
-    return render(request,'home.html',{'original_text':news1,'summarized_text':summarized_text})
+        summ_vector = np.divide(summ_vector, 5)
+        
+    cos = cosine_similarity(para_vector.reshape(1, 100), summ_vector.reshape(1, 100))[0,0]
+        
+    tot_score = 0
+    for candidate in candidates:
+        sc = sentence_bleu(references, candidate)
+        tot_score+=sc
+    bleu = tot_score/len(candidates)
+        
+    rouge = scorer.score(news1, summarized_text)
+    
+    return render(request,'home.html',{'original_text':news1,'summarized_text':summarized_text,'bleu':bleu,'rouge':rouge,'cos':cos})
 
 
 

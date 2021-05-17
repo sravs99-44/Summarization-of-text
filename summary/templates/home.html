@@ -125,9 +125,15 @@ border-style: inset;
 </div> 
 <div id = "rightbox">
     <h2>The summary is...</h2>
-    <p><textarea name="item" cols="150" rows="40">
-      {{summarized_text}}
-    </textarea>
+    <p><textarea color:green name="item" cols="150" rows="40">
+      {% if summarized_text%}
+      
+      Summary: {{summarized_text}}
+      Bleu-score: {{bleu}}
+      rouge-score: {{rouge}}
+      cosine-similarity:{{cos}}
+      {%endif%}
+    </textarea></p>
 </div> 
 
 
