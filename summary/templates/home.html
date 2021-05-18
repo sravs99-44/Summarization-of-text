@@ -48,6 +48,15 @@ a{
                 
                 border : solid #333;
             }
+            #rightbox2{
+                float:left; 
+                background:#f2f2f2;
+                width:50%;
+                height:100px;
+                padding-left:20px;
+                
+                border : solid #333;
+            }
 
 
 .button {
@@ -67,14 +76,33 @@ a{
 }
 textarea {
 width: 600px;
-height: 350px;
+height:350px;
 border:none;
 background:white;
 scrollbar-base-color:#333;
-scrollbar-arrow-color: w;
 border-radius: 25px;
 border-style: inset;
 }
+#textareaRight1{
+  width: 600px;
+height:190px;
+border:none;
+background:white;
+scrollbar-base-color:#333;
+border-radius: 25px;
+border-style: inset;
+
+}
+#textareaRight2{
+width: 600px;
+height:50px;
+border:none;
+background:white;
+border-radius: 10px;
+border-style: inset;
+
+}
+
 
 /* Create three equal columns that floats next to each other */
 .column {
@@ -105,10 +133,10 @@ border-style: inset;
 </div>
 
 <div id = "leftbox">
-    <h2>Enter your text to be summarized...</h2>
+    <h3>Enter your text to be summarized...</h3>
    
     <form method="POST" action='home' >{% csrf_token %}
-        <textarea  name="fulltext" >
+        <textarea   name="fulltext" >
         {{original_text}}
         </textarea>
     
@@ -124,17 +152,25 @@ border-style: inset;
         
 </div> 
 <div id = "rightbox">
-    <h2>The summary is...</h2>
-    <p><textarea color:green name="item" cols="150" rows="40">
+    <h3>The summary is...</h3>
+    <p><textarea id="textareaRight1" name="item" cols="150" rows="40">
       {% if summarized_text%}
-      
       Summary: {{summarized_text}}
-      Bleu-score: {{bleu}}
-      rouge-score: {{rouge}}
-      cosine-similarity:{{cos}}
       {%endif%}
     </textarea></p>
-</div> 
+  <h4>Bleu-score:</h4>
+  <p><textarea id="textareaRight2"   cols="10" rows="1">
+    {% if summarized_text%}
+    {{bleu}}
+    {%endif%}
+  </textarea></p>
+  <h4>Cosine-similarity:</h4>
+  <p><textarea id="textareaRight2"  cols="10" rows="1">
+    {% if summarized_text%}
+    {{cos}}
+    {%endif%}
+  </textarea></p>
+</div>
 
 
 
